@@ -1,0 +1,4 @@
+product_id,name,category,price,supplier,status
+1,Laptop,Electronics,1000,TechCorp,active
+2,Mouse,Accessories,25,PeriTech,active
+3,Keyboard,Accessories,75,PeriTech,active
