@@ -1,0 +1,66 @@
+Build Production SCD2 Data Model for Product Dimensions
+
+Real World Context
+You're a data engineer at a growing ecommerce company where product information changes frequently—prices adjust based on market conditions, suppliers change, and product categories get reorganized for better merchandising. The analytics team needs to track these changes historically to analyze pricing trends, supplier performance, and category evolution impacts on sales.
+Your challenge is to implement a production ready SCD2 system using dbt that automatically captures and preserves these product dimension changes while maintaining the ability to query both current product information and historical states for trend analysis.
+
+Learning Focus
+You will demonstrate these capabilities:
+- Configure dbt snapshots with appropriate change detection strategies for product data tracking
+- Implement automated historical record versioning with proper validity periods and current status management
+- Create productionready data models with performance optimization and data quality validation
+
+Prerequisites & Setup
+- dbt development environment with database connection configured
+- Access to sample product data or ability to create mock product dataset
+- SQL query interface for validation and testing
+- Basic understanding of dbt project structure (models, snapshots, tests directories)
+
+Your Challenge
+The product management team at your ecommerce company needs comprehensive historical tracking of product changes to support pricing analysis and supplier performance reviews. Recent business requirements include analyzing how price changes affect sales velocity and understanding the impact of category reorganizations on customer browsing behavior.
+You must implement an SCD2 system that tracks changes to product names, categories, prices, supplier relationships, and product status while maintaining query performance for both current product lookups and historical trend analysis.
+
+Scaffolded Instructions
+Step 1: Design Your Product Dimension Data Model (4 minutes):
+Create a staging model (stg_products.sql) that prepares your product data for SCD2 tracking. Your model should select essential product attributes and include a hash field for efficient change detection:
+- Product identification (business key)
+- Trackable attributes: name, category, price, supplier, status
+- System timestamp for change detection
+- Record hash combining all trackable attributes
+Hint: Use dbt_utils.generate_surrogate_key() to create the hash field combining your trackable attributes. This optimizes change detection performance.
+
+Step 2: Configure SCD2 Snapshot with Strategic Change Detection (6 minutes):
+Create a dbt snapshot (products_snapshot.sql) that implements SCD2 logic with appropriate change detection strategy:
+- Use check strategy to track specific business meaningful attributes
+- Configure proper target database and schema for your environment
+- Ensure your unique_key matches your product business identifier
+Consider: Which product attributes change frequently vs. rarely? Price changes might happen weekly, but product names rarely change. Design your check_cols accordingly.
+
+Step 3: Build Current Product View for Analytics (4 minutes):
+Create a dimensional model (dim_products_current.sql) that provides clean, analystfriendly access to current product information:
+- Map dbtgenerated fields to businessfriendly column names
+- Include surrogate key for fact table relationships
+- Filter for only current records (dbt_valid_to IS NULL)
+- Add calculated fields like days_since_last_change if useful for analysis
+Implementation tip: Rename dbt_scd_id to product_sk (surrogate key) and dbt_valid_from to effective_date for clearer business understanding.
+
+Step 4: Implement Production Data Quality Tests (4 minutes):
+Create comprehensive tests in schema.yml to ensure SCD2 data integrity:
+- Standard tests for surrogate key uniqueness and business key completeness
+- Custom test ensuring each product has exactly one current record
+- Validation that price changes are logical (no negative prices, reasonable ranges)
+- Test for proper temporal logic (valid_from < valid_to when both exist)
+Advanced validation: Consider testing that discontinued products have proper end dates and that reactivated products create new historical records correctly.
+
+Success Indicators
+Staging model executes successfully and produces clean product data with hash field
+Snapshot configuration runs without errors and creates proper SCD2 structure with dbt generated temporal fields
+Current product view provides accurate, analystready dimensional data
+All data quality tests pass, confirming proper SCD2 implementation and business rule compliance
+System can demonstrate historical tracking by showing before/after states when test data changes
+
+Common Pitfalls & Prevention
+Configuration Errors: Ensure target_database and target_schema match your environment exactly. Test with dbt snapshot models products_snapshot before proceeding to validation steps.
+Change Detection Issues: If your source data lacks reliable timestamps, focus on the check strategy with carefully selected check_cols that represent true business changes rather than system updates.
+Performance Concerns: For tables with frequent price changes, consider whether all price updates warrant historical tracking or if you need threshold based change detection (e.g., price changes > 5%).
+Test Failures: If the "single current record" test fails, check for duplicate business keys in source data or investigate whether your unique_key configuration matches your actual data structure.
