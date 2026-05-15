@@ -1,0 +1,86 @@
+version: 2
+
+models:
+
+  # =========================
+  # STAGING MODEL
+  # =========================
+
+  - name: stg_products
+    description: >
+      Cleaned and standardized staging model for product data
+      used as the source for SCD2 historical tracking.
+
+    columns:
+
+      - name: product_id
+        description: Unique business identifier for each product.
+        tests:
+          - not_null
+          - unique
+
+      - name: product_name
+        description: Standardized product name.
+        tests:
+          - not_null
+
+      - name: category
+        description: Product category classification.
+        tests:
+          - not_null
+
+      - name: price
+        description: Product sale price.
+        tests:
+          - not_null
+
+      - name: supplier
+        description: Product supplier name.
+        tests:
+          - not_null
+
+      - name: product_status
+        description: Current product status.
+
+        tests:
+          - accepted_values:
+              values: ['active', 'inactive', 'discontinued']
+
+      - name: record_hash
+        description: >
+          Surrogate hash generated from trackable product
+          attributes for SCD2 change detection.
+        tests:
+          - not_null
+
+  # =========================
+  # CURRENT DIMENSION MODEL
+  # =========================
+
+  - name: dim_products_current
+    description: >
+      Current active version of the product dimension
+      derived from the SCD2 snapshot.
+
+    columns:
+
+      - name: product_sk
+        description: Surrogate key for warehouse joins.
+        tests:
+          - not_null
+          - unique
+
+      - name: product_id
+        description: Product business key.
+        tests:
+          - not_null
+
+      - name: price
+        description: Current product price.
+        tests:
+          - not_null
+
+      - name: effective_date
+        description: Timestamp when the current version became active.
+        tests:
+          - not_null
